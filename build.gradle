@@ -1,0 +1,120 @@
+import groovy.json.JsonSlurper
+
+plugins {
+    id 'java'
+}
+
+def modInfo = new JsonSlurper().parse(file('src/main/resources/ModTheSpire.json'))
+
+group = 'stscontrollervibration'
+version = modInfo.version
+
+base {
+    archivesName = 'StsControllerVibrationSupport'
+}
+
+def steamLibraryEnvName = 'STS_STEAM_LIBRARY'
+
+def steamLibraryDir = providers.environmentVariable(steamLibraryEnvName).map { envValue ->
+    def dir = file(envValue)
+    if (!dir.isDirectory()) {
+        throw new GradleException("${steamLibraryEnvName} points to a missing directory: ${dir}")
+    }
+    return dir
+}
+
+def gameDir = steamLibraryDir.map { new File(it, 'steamapps/common/SlayTheSpire') }
+def gameJar = gameDir.map { dir ->
+    def jar = new File(dir, 'desktop-1.0.jar')
+    if (!jar.isFile()) {
+        throw new GradleException("Slay the Spire desktop jar not found at ${jar}")
+    }
+    return jar
+}
+
+def workshopRoot = steamLibraryDir.map { new File(it, 'steamapps/workshop/content/646570') }
+
+def resolveWorkshopJar = { String fileName ->
+    workshopRoot.map { root ->
+        if (!root.isDirectory()) {
+            throw new GradleException("Steam workshop directory not found at ${root}")
+        }
+
+        def matches = fileTree(root) {
+            include "**/${fileName}"
+        }.files.toList().sort { left, right ->
+            right.lastModified() <=> left.lastModified()
+        }
+
+        if (matches.isEmpty()) {
+            throw new GradleException("Could not locate ${fileName} under ${root}")
+        }
+
+        return matches.first()
+    }
+}
+
+def mtsJar = resolveWorkshopJar('ModTheSpire.jar')
+def baseModJar = resolveWorkshopJar('BaseMod.jar')
+def modsDir = gameDir.map { new File(it, 'mods') }
+
+def compileClasspathFiles = providers.provider {
+    return [gameJar.get(), mtsJar.get(), baseModJar.get()]
+}
+
+repositories {
+}
+
+dependencies {
+    compileOnly files(compileClasspathFiles)
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 8
+    options.debug = true
+    options.compilerArgs += ['-proc:none', '-Xlint:-options']
+}
+
+tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.jar {
+    archiveFileName = 'StsControllerVibrationSupport.jar'
+}
+
+def jarTask = tasks.named('jar', Jar)
+
+tasks.register('printBuildEnvironment') {
+    doLast {
+        logger.lifecycle("Steam library: ${steamLibraryDir.get()}")
+        logger.lifecycle("Game jar: ${gameJar.get()}")
+        logger.lifecycle("ModTheSpire jar: ${mtsJar.get()}")
+        logger.lifecycle("BaseMod jar: ${baseModJar.get()}")
+        logger.lifecycle("Output jar: ${jarTask.get().archiveFile.get().asFile}")
+    }
+}
+
+tasks.register('installMod', Copy) {
+    dependsOn jarTask
+    from(jarTask.flatMap { it.archiveFile })
+    into(modsDir)
+    rename { 'StsControllerVibrationSupport.jar' }
+
+    doFirst {
+        def installDir = modsDir.get()
+        if (!installDir.exists() && !installDir.mkdirs()) {
+            throw new GradleException("Failed to create mods directory at ${installDir}")
+        }
+        logger.lifecycle("Installing mod jar to ${installDir}")
+    }
+}
+
+tasks.named('build') {
+    finalizedBy(tasks.named('printBuildEnvironment'))
+}

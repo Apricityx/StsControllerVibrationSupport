@@ -46,8 +46,24 @@
 
 要求：
 
-- JDK，且 `javac`、`jar` 在 `PATH` 中
+- JDK
+- Gradle，或者使用仓库自带的 Gradle Wrapper
 - 本机已安装 Slay the Spire、ModTheSpire、BaseMod
+- 设置环境变量 `STS_STEAM_LIBRARY`
+
+`STS_STEAM_LIBRARY` 需要指向你的 Steam Library 根目录，而不是游戏目录本身。
+
+例如：
+
+```powershell
+$env:STS_STEAM_LIBRARY = 'E:\SteamLibrary'
+```
+
+Gradle 会从这个路径推导：
+
+- `steamapps/common/SlayTheSpire/desktop-1.0.jar`
+- `steamapps/workshop/content/646570/**/ModTheSpire.jar`
+- `steamapps/workshop/content/646570/**/BaseMod.jar`
 
 仅构建：
 
@@ -55,16 +71,29 @@
 ./build.ps1
 ```
 
-构建并安装到自动识别的 `mods` 目录：
+构建并安装到由 `STS_STEAM_LIBRARY` 推导出来的 `mods` 目录：
 
 ```powershell
 ./build.ps1 -Install
 ```
 
+也可以直接使用 Gradle：
+
+```powershell
+./gradlew.bat build
+./gradlew.bat installMod
+```
+
+说明：
+
+- `build.ps1` 会优先使用系统上的 `gradle`
+- 如果系统上没有 `gradle`，它会回退到仓库里的 `gradlew.bat`
+- `gradlew.bat` 首次运行需要下载对应 Gradle 发行版
+
 构建产物：
 
 ```text
-build/StsControllerVibrationSupport.jar
+build/libs/StsControllerVibrationSupport.jar
 ```
 
 ## 开发
@@ -82,6 +111,7 @@ build/StsControllerVibrationSupport.jar
 
 ## 已知说明
 
-- `build.ps1` 会自动从常见 Steam 路径查找 `desktop-1.0.jar`、`ModTheSpire.jar` 和 `BaseMod.jar`
+- 构建链已经切到 Gradle，`build.ps1` 只是一个调用 Gradle 的薄包装
+- Steam 路径不再写死在脚本里，而是统一从 `STS_STEAM_LIBRARY` 读取
 - Steam Input 优先是为了避免和其他 Windows 手柄后端重复振动
 - 宝箱逻辑当前通过房间 `update()` 监听开启状态，而不是直接挂在 `AbstractChest.open(...)` 核心奖励链上
