@@ -1,0 +1,11 @@
+{
+  "modid": "sts_controller_vibration",
+  "name": "STS Controller Vibration Support",
+  "author_list": ["Codex"],
+  "description": "Adds configurable per-event controller rumble feedback.",
+  "version": "0.9.4",
+  "sts_version": "12-18-2022",
+  "mts_version": "3.30.0",
+  "dependencies": ["basemod"],
+  "update_json": ""
+}
