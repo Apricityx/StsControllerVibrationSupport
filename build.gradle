@@ -13,7 +13,7 @@ base {
     archivesName = 'StsControllerVibrationSupport'
 }
 
-def steamLibraryEnvName = 'STS_STEAM_LIBRARY'
+def steamLibraryEnvName = 'STEAM_PATH'
 
 def steamLibraryDir = providers.environmentVariable(steamLibraryEnvName).map { envValue ->
     def dir = file(envValue)

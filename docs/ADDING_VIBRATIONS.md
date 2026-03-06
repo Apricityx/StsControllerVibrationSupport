@@ -135,21 +135,21 @@ public class RelicObtainedPatch {
 构建：
 
 ```powershell
-$env:STS_STEAM_LIBRARY = 'E:\SteamLibrary'
-./build.ps1
+$env:STEAM_PATH = 'E:\SteamLibrary'
+gradle build
 ```
 
 安装：
 
 ```powershell
-$env:STS_STEAM_LIBRARY = 'E:\SteamLibrary'
-./build.ps1 -Install
+$env:STEAM_PATH = 'E:\SteamLibrary'
+gradle installMod
 ```
 
 或者直接调用 Gradle：
 
 ```powershell
-$env:STS_STEAM_LIBRARY = 'E:\SteamLibrary'
+$env:STEAM_PATH = 'E:\SteamLibrary'
 ./gradlew.bat build
 ./gradlew.bat installMod
 ```

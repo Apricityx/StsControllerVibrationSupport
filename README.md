@@ -13,7 +13,7 @@
 - 问号房 / Neow 选项确认
 - 获得格挡
 - 伤害被格挡
-- 升级牌三段节奏振动
+- 敲牌
 - 打开宝箱
 
 后端顺序：
@@ -26,7 +26,7 @@
 - 每个振动事件都有固定 `id`、显示名称和独立配置项
 - 配置界面支持中英文 i18n
 - 每个事件都可以单独调整 `0% - 100%` 强度
-- 高频事件支持最小触发间隔，避免振动疲劳
+- 高频事件支持最小触发间隔
 - 支持延迟脉冲和多段节奏振动
 
 ## 项目结构
@@ -49,14 +49,14 @@
 - JDK
 - Gradle，或者使用仓库自带的 Gradle Wrapper
 - 本机已安装 Slay the Spire、ModTheSpire、BaseMod
-- 设置环境变量 `STS_STEAM_LIBRARY`
+- 设置环境变量 `STEAM_PATH`
 
-`STS_STEAM_LIBRARY` 需要指向你的 Steam Library 根目录，而不是游戏目录本身。
+`STEAM_PATH` 需要指向你的 Steam Library 根目录，而不是游戏目录本身。
 
 例如：
 
 ```powershell
-$env:STS_STEAM_LIBRARY = 'E:\SteamLibrary'
+$env:STEAM_PATH = 'E:\SteamLibrary'
 ```
 
 Gradle 会从这个路径推导：
@@ -65,29 +65,20 @@ Gradle 会从这个路径推导：
 - `steamapps/workshop/content/646570/**/ModTheSpire.jar`
 - `steamapps/workshop/content/646570/**/BaseMod.jar`
 
-仅构建：
+使用 Gradle：
 
 ```powershell
-./build.ps1
-```
+gradle build
+gradle installMod
 
-构建并安装到由 `STS_STEAM_LIBRARY` 推导出来的 `mods` 目录：
-
-```powershell
-./build.ps1 -Install
-```
-
-也可以直接使用 Gradle：
-
-```powershell
 ./gradlew.bat build
 ./gradlew.bat installMod
 ```
 
 说明：
 
-- `build.ps1` 会优先使用系统上的 `gradle`
-- 如果系统上没有 `gradle`，它会回退到仓库里的 `gradlew.bat`
+- 可以直接使用系统上的 `gradle`
+- 如果不想依赖系统安装，使用仓库里的 `gradlew.bat`
 - `gradlew.bat` 首次运行需要下载对应 Gradle 发行版
 
 构建产物：
@@ -111,7 +102,6 @@ build/libs/StsControllerVibrationSupport.jar
 
 ## 已知说明
 
-- 构建链已经切到 Gradle，`build.ps1` 只是一个调用 Gradle 的薄包装
-- Steam 路径不再写死在脚本里，而是统一从 `STS_STEAM_LIBRARY` 读取
+- Steam 路径不再写死在脚本里，而是统一从 `STEAM_PATH` 读取
 - Steam Input 优先是为了避免和其他 Windows 手柄后端重复振动
 - 宝箱逻辑当前通过房间 `update()` 监听开启状态，而不是直接挂在 `AbstractChest.open(...)` 核心奖励链上
